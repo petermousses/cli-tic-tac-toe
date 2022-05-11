@@ -1,6 +1,7 @@
 use std::env;
 use std::io::stdin;
 use ansi_term::{Style, Color::Red, Color::Green};
+use rand::prelude::*;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -11,7 +12,7 @@ enum Tile {
 }
 struct TicTacToe<'a> {
     player: Tile,
-    board: &'a mut [[Tile; 3]; 3]
+    board: &'a mut Vec<Vec<Tile>>
 }
 impl<'a> TicTacToe<'a> {
     fn choose_coords(&self) -> [usize; 2] {
@@ -80,13 +81,13 @@ impl<'a> TicTacToe<'a> {
             Tile::NONE => print!(" |\n|"),
             _ => print!("{:?}|\n|", self.board[0][2])
         }
-        match self.board[0][0] {
+        match self.board[1][0] {
             Tile::NONE => print!("  "),
             _ => print!("{:?} ", self.board[0][0])
-        } match self.board[0][1] {
+        } match self.board[1][1] {
             Tile::NONE => print!("  "),
             _ => print!("{:?} ", self.board[0][1])
-        } match self.board[0][2] {
+        } match self.board[1][2] {
             Tile::NONE => print!(" |\n"),
             _ => print!("{:?}|\n", self.board[0][2])
         }
@@ -107,27 +108,51 @@ impl<'a> TicTacToe<'a> {
         }
     }
     fn play(&mut self) {
-        loop {
+        let mut winner = Tile::NONE;
+        while winner == Tile::NONE {
             let coordinates = self.choose_coords();
             println!("{:?} plays at {:?}", self.player, coordinates);
-            match self.board[coordinates[0]][coordinates[1]] {
+            match self.board[coordinates[0] - 1][coordinates[1] - 1] {
                 Tile::NONE => match self.player {
-                    Tile::X => self.board[coordinates[0]][coordinates[1]] = Tile::X,
-                    Tile::O => self.board[coordinates[0]][coordinates[1]] = Tile::O,
+                    Tile::X => self.board[coordinates[0] - 1][coordinates[1] - 1] = Tile::X,
+                    Tile::O => self.board[coordinates[0] - 1][coordinates[1] - 1] = Tile::O,
                     _ => ()
                 },
-                _ => println!("{}", Red.paint("This spot is taken, try again"))
+                _ => {
+                    println!("{}", Red.paint("This spot is taken, try again"));
+                    continue;
+                }
             }
+            self.other_turn();
             self.print();
-            break;
+            winner = self.check_winner();
         }
-        match self.check_winner() {
-            Tile::NONE => println!("{}", Green.paint("You win!")),
-            _ => println!("{}", Red.paint("Computer wins :(")),
+        if winner == self.player {
+            println!("{}", Green.paint("You win!"));
+        } else {
+            println!("{}", Red.paint("Computer wins :("));
         }
-        
+    }
+    fn other_turn(&mut self) {
+        if  !self.board.iter().any(|x| x.iter().any(|y| y != &Tile::NONE)) 
+            // !self.board.iter().any(|x| x.iter().any(|y| y == &Tile::NONE))
+        { return; }
+        println!("In here");
+        loop {
+            let x_coord = rand::thread_rng().gen_range(0, 3);
+            let y_coord = rand::thread_rng().gen_range(0, 3);
+            if self.board[x_coord][y_coord] == Tile::NONE {
+                self.board[x_coord][y_coord] = match self.player {
+                    // Tile::X => Tile::O,
+                    Tile::O => Tile::X,
+                    _ => Tile::O
+                };
+                return;
+            }
+        }
     }
     fn check_winner(&self) -> Tile {
+        // TODO:
         Tile::NONE
     }
 }
@@ -152,15 +177,14 @@ fn main() {
     }
     let mut game = TicTacToe {
         player: character,
-        board: &mut [
-            [Tile::NONE, Tile::NONE, Tile::NONE],
-            [Tile::NONE, Tile::NONE, Tile::NONE],
-            [Tile::NONE, Tile::NONE, Tile::NONE],
+        board: &mut vec![
+            vec![Tile::NONE, Tile::NONE, Tile::NONE],
+            vec![Tile::NONE, Tile::NONE, Tile::NONE],
+            vec![Tile::NONE, Tile::NONE, Tile::NONE],
         ],
     };
     game.print();
     game.play();
-    game.print();
 }
 
 fn choose_character() -> Tile {
