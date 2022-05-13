@@ -1,19 +1,65 @@
 use std::env;
+use std::fmt;
+use rand::Rng;
 use std::io::stdin;
 use ansi_term::{Style, Color::*};
-use rand::Rng;
 
-#[derive(Debug)]
 #[derive(PartialEq)]
 enum Tile {
     NONE,
     X,
     O,
 }
+impl fmt::Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &Tile::X => write!(f, "X"),
+            &Tile::O => write!(f, "O"),
+            &Tile::NONE => write!(f, " "),
+        }
+    }
+}
 struct TicTacToe<'a> {
     player: Tile,
     computer: Tile,
     board: &'a mut Vec<Vec<Tile>>
+}
+impl<'a> fmt::Display for TicTacToe<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match write!(f, "{}\n", Style::new().underline().paint("       ")) {
+            Ok(_) => (),
+            Err(e) => println!("Error printing out gameboard {}", e)
+        }
+        match write!(f, "|{} {} {}|\n", self.board[0][0], self.board[0][1], self.board[0][2]) {
+            Ok(_) => (),
+            Err(e) => println!("Error printing out gameboard {}", e)
+        }
+        match write!(f, "|{} {} {}|\n", self.board[1][0], self.board[1][1], self.board[1][2]) {
+            Ok(_) => (),
+            Err(e) => println!("Error printing out gameboard {}", e)
+        }
+        match match self.board[2][0] {
+            Tile::X => write!(f, "{}", Style::new().underline().paint("|X ")),
+            Tile::O => write!(f, "{}", Style::new().underline().paint("|O ")),
+            Tile::NONE => write!(f, "{}", Style::new().underline().paint("|  ")),
+        } {
+            Ok(_) => (),
+            Err(e) => println!("Error printing out gameboard {}", e)
+        }
+        match match self.board[2][1] {
+            Tile::X => write!(f, "{}", Style::new().underline().paint("X ")),
+            Tile::O => write!(f, "{}", Style::new().underline().paint("O ")),
+            Tile::NONE => write!(f, "{}", Style::new().underline().paint("  ")),
+        } {
+            Ok(_) => (),
+            Err(e) => println!("Error printing out gameboard {}", e)
+        }
+        match self.board[2][2] {
+            Tile::X => write!(f, "{}", Style::new().underline().paint("X|")),
+            Tile::O => write!(f, "{}", Style::new().underline().paint("O|")),
+            Tile::NONE => write!(f, "{}", Style::new().underline().paint(" |")),
+        }
+    }
 }
 impl<'a> TicTacToe<'a> {
     fn copy_tile(&self, to_copy: &Tile) -> Tile {
@@ -29,11 +75,8 @@ impl<'a> TicTacToe<'a> {
     fn choose_coord(&self, row_t_or_col_f: bool) -> usize {
         let mut coord;
         let mut coord_num;
-        if row_t_or_col_f {
-            println!("Enter the row:\t");
-        } else {
-            println!("Enter the column:\t");
-        }
+        if row_t_or_col_f   { println!("Enter the row:\t"); }
+        else                { println!("Enter the column:\t"); }
         loop {
             coord = String::new();
             match stdin().read_line(&mut coord) {
@@ -52,51 +95,13 @@ impl<'a> TicTacToe<'a> {
         }
         coord_num
     }
-    fn print(&self) {
-        print!("{}\n|", Style::new().underline().paint("       "));
-        match self.board[0][0] {
-            Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[0][0])
-        } match self.board[0][1] {
-            Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[0][1])
-        } match self.board[0][2] {
-            Tile::NONE => print!(" |\n|"),
-            _ => print!("{:?}|\n|", self.board[0][2])
-        }
-        match self.board[1][0] {
-            Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[1][0])
-        } match self.board[1][1] {
-            Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[1][1])
-        } match self.board[1][2] {
-            Tile::NONE => println!(" |"),
-            _ => println!("{:?}|", self.board[1][2])
-        }
-        match self.board[2][0] {
-            Tile::X => print!("{}", Style::new().underline().paint("|X ")),
-            Tile::O => print!("{}", Style::new().underline().paint("|O ")),
-            Tile::NONE => print!("{}", Style::new().underline().paint("|  ")),
-        }
-        match self.board[2][1] {
-            Tile::X => print!("{}", Style::new().underline().paint("X ")),
-            Tile::O => print!("{}", Style::new().underline().paint("O ")),
-            Tile::NONE => print!("{}", Style::new().underline().paint("  ")),
-        }
-        match self.board[2][2] {
-            Tile::X => println!("{}", Style::new().underline().paint("X|")),
-            Tile::O => println!("{}", Style::new().underline().paint("O|")),
-            Tile::NONE => println!("{}", Style::new().underline().paint(" |")),
-        }
-    }
     fn play(&mut self) {
-        self.print();
+        println!("{}", self);
         let mut winner = Tile::NONE;
         while winner == Tile::NONE {
             if self.is_board_full() { break }
             let coordinates = self.choose_coords();
-            println!("{:?} plays at {:?}", self.player, coordinates);
+            println!("{} plays at {:?}", self.player, coordinates);
             match self.board[coordinates[0] - 1][coordinates[1] - 1] {
                 Tile::NONE => self.board[coordinates[0] - 1][coordinates[1] - 1] = self.copy_tile(&self.player),
                 _ => {
@@ -105,7 +110,7 @@ impl<'a> TicTacToe<'a> {
                 }
             }
             self.computer_turn();
-            self.print();
+            println!("{}", self);
             winner = self.check_winner();
         }
         if winner == self.player {
