@@ -1,7 +1,7 @@
 use std::env;
 use std::io::stdin;
 use ansi_term::{Style, Color::*};
-use rand::prelude::*;
+use rand::Rng;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
