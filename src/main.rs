@@ -1,6 +1,6 @@
 use std::env;
 use std::io::stdin;
-use ansi_term::{Style, Color::Red, Color::Green};
+use ansi_term::{Style, Color::*};
 use rand::prelude::*;
 
 #[derive(Debug)]
@@ -15,6 +15,13 @@ struct TicTacToe<'a> {
     board: &'a mut Vec<Vec<Tile>>
 }
 impl<'a> TicTacToe<'a> {
+    fn copy_tile(&self, input: &Tile) -> Tile {
+        match input {
+            &Tile::X => Tile::X,
+            &Tile::O => Tile::O,
+            &Tile::NONE => Tile::NONE
+        }
+    }
     fn choose_coords(&self) -> [usize; 2] {
         [self.choose_row(), self.choose_col()]
     }
@@ -83,13 +90,13 @@ impl<'a> TicTacToe<'a> {
         }
         match self.board[1][0] {
             Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[0][0])
+            _ => print!("{:?} ", self.board[1][0])
         } match self.board[1][1] {
             Tile::NONE => print!("  "),
-            _ => print!("{:?} ", self.board[0][1])
+            _ => print!("{:?} ", self.board[1][1])
         } match self.board[1][2] {
             Tile::NONE => print!(" |\n"),
-            _ => print!("{:?}|\n", self.board[0][2])
+            _ => print!("{:?}|\n", self.board[1][2])
         }
         match self.board[2][0] {
             Tile::X => print!("{}", Style::new().underline().paint("|X ")),
@@ -110,11 +117,18 @@ impl<'a> TicTacToe<'a> {
     fn play(&mut self) {
         let mut winner = Tile::NONE;
         while winner == Tile::NONE {
+            if self.is_board_full() {
+                return;
+            }
             let coordinates = self.choose_coords();
             println!("{:?} plays at {:?}", self.player, coordinates);
             match self.board[coordinates[0] - 1][coordinates[1] - 1] {
                 Tile::NONE => match self.player {
-                    Tile::X => self.board[coordinates[0] - 1][coordinates[1] - 1] = Tile::X,
+                    Tile::X => {
+                        println!("at X");
+                        self.board[coordinates[0] - 1][coordinates[1] - 1] = Tile::X;
+                        println!("{:?}", self.board[coordinates[0] - 1][coordinates[1] - 1]);
+                    },
                     Tile::O => self.board[coordinates[0] - 1][coordinates[1] - 1] = Tile::O,
                     _ => ()
                 },
@@ -139,6 +153,15 @@ impl<'a> TicTacToe<'a> {
         { return; }
         println!("In here");
         loop {
+            let mut shouldReturn = true;
+            for row in 0..3 {
+                for col in 0..3 {
+                    if self.board[row][col] == Tile::NONE {
+                        shouldReturn = false;
+                    }
+                }
+            }
+            if shouldReturn { return }
             let x_coord = rand::thread_rng().gen_range(0, 3);
             let y_coord = rand::thread_rng().gen_range(0, 3);
             if self.board[x_coord][y_coord] == Tile::NONE {
@@ -147,13 +170,34 @@ impl<'a> TicTacToe<'a> {
                     Tile::O => Tile::X,
                     _ => Tile::O
                 };
-                return;
+                return
             }
         }
     }
     fn check_winner(&self) -> Tile {
-        // TODO:
+        // Vertical
+        if self.board[0][0] == self.board[1][0] && self.board[1][0] == self.board[2][0] { return self.copy_tile(&self.board[0][0]) }
+        if self.board[0][1] == self.board[1][1] && self.board[1][1] == self.board[2][1] { return self.copy_tile(&self.board[0][1]) }
+        if self.board[0][2] == self.board[1][2] && self.board[1][2] == self.board[2][2] { return self.copy_tile(&self.board[0][2]) }
+        // Horizontal
+        if self.board[0][0] == self.board[0][1] && self.board[0][1] == self.board[0][2] { return self.copy_tile(&self.board[0][0]) }
+        if self.board[1][0] == self.board[1][1] && self.board[1][1] == self.board[1][2] { return self.copy_tile(&self.board[1][0]) }
+        if self.board[2][0] == self.board[2][1] && self.board[2][1] == self.board[2][2] { return self.copy_tile(&self.board[2][0]) }
+        // Diagonal
+        if self.board[0][0] == self.board[1][1] && self.board[1][1] == self.board[2][2] { return self.copy_tile(&self.board[0][0]) }
+        if self.board[0][2] == self.board[1][1] && self.board[1][1] == self.board[2][0] { return self.copy_tile(&self.board[0][2]) }
         Tile::NONE
+    }
+    fn is_board_full(&self) -> bool {
+        for row in 0..3 {
+            for col in 0..3 {
+                if self.board[row][col] == Tile::NONE {
+                    return false
+                }
+            }
+        }
+        println!("{}", Blue.paint("Cat's game, no winner!"));
+        true
     }
 }
 
