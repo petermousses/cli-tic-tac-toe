@@ -96,10 +96,9 @@ impl<'a> TicTacToe<'a> {
         coord_num
     }
     fn play(&mut self) {
-        println!("{}", self);
         let mut winner = Tile::NONE;
-        while winner == Tile::NONE {
-            if self.is_board_full() { break }
+        while winner == Tile::NONE && !self.is_board_full() {
+            println!("{}", self);
             let coordinates = self.choose_coords();
             println!("{} plays at {:?}", self.player, coordinates);
             match self.board[coordinates[0] - 1][coordinates[1] - 1] {
@@ -110,9 +109,9 @@ impl<'a> TicTacToe<'a> {
                 }
             }
             self.computer_turn();
-            println!("{}", self);
             winner = self.check_winner();
         }
+        println!("{}", self);
         if winner == self.player {
             println!("{}", Green.paint("You win!"));
         } else if winner == self.computer {
