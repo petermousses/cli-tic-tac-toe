@@ -4,6 +4,7 @@ use rand::Rng;
 use std::io::stdin;
 use ansi_term::{Style, Color::*};
 
+// This enumerates all of the possible values a tile can have, and also defines a way to print it out
 #[derive(PartialEq)]
 enum Tile {
     NONE,
@@ -19,11 +20,15 @@ impl fmt::Display for Tile {
         }
     }
 }
+
+// This is a "class" defining tictactoe game, rules, and allows game to run. This specific struct defines data values in struct
 struct TicTacToe<'a> {
     player: Tile,
     computer: Tile,
     board: &'a mut Vec<Vec<Tile>>
 }
+
+// Implement display for game board
 impl<'a> fmt::Display for TicTacToe<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match write!(f, "{}\n", Style::new().underline().paint("       ")) {
@@ -61,7 +66,10 @@ impl<'a> fmt::Display for TicTacToe<'a> {
         }
     }
 }
+
+// Methods of tictactoe "class"
 impl<'a> TicTacToe<'a> {
+    // Workaround for duplicating data in rust, basically copy in reference and return new object of same typed value
     fn copy_tile(&self, to_copy: &Tile) -> Tile {
         match to_copy {
             &Tile::X => Tile::X,
@@ -69,6 +77,8 @@ impl<'a> TicTacToe<'a> {
             &Tile::NONE => Tile::NONE
         }
     }
+
+    // These two functions allow user to specify a location on the board
     fn choose_coords(&self) -> [usize; 2] {
         [self.choose_coord(true), self.choose_coord(false)]
     }
@@ -95,6 +105,8 @@ impl<'a> TicTacToe<'a> {
         }
         coord_num
     }
+
+    // Function to run the game
     fn play(&mut self) {
         let mut winner = Tile::NONE;
         while winner == Tile::NONE && !self.is_board_full() {
@@ -120,6 +132,8 @@ impl<'a> TicTacToe<'a> {
             println!("{}", Blue.paint("Cat's game, no winner."));
         }
     }
+
+    // Function for the computer to play, implemented as a simple random function for now
     fn computer_turn(&mut self) {
         if self.is_board_full() { return }
         loop {
@@ -131,6 +145,8 @@ impl<'a> TicTacToe<'a> {
             }
         }
     }
+
+    // Check if Xs or Os are on all 3 diagonals, verticals, or horizontals to win, returns the tile value for the player that won
     fn check_winner(&self) -> Tile {
         // Vertical
         if self.board[0][0] == self.board[1][0] && self.board[1][0] == self.board[2][0] { return self.copy_tile(&self.board[0][0]) }
@@ -146,6 +162,8 @@ impl<'a> TicTacToe<'a> {
         // No winner yet
         Tile::NONE
     }
+
+    // Check if there are any playable spaces
     fn is_board_full(&self) -> bool {
         for row in 0..3 {
             for col in 0..3 {
@@ -162,6 +180,8 @@ fn main() {
     let cmd_args: Vec<String> = env::args().collect();
     let character;
     let computer;
+
+    // Determine what tile person will play as
     if cmd_args.len() > 1 {
         (character, computer) = match cmd_args[1].to_uppercase().trim() {
             "X" => {
@@ -177,6 +197,8 @@ fn main() {
     } else {
         (character, computer) = choose_character();
     }
+
+    // Initialize board and start game
     TicTacToe {
         player: character,
         computer: computer,
@@ -188,6 +210,7 @@ fn main() {
     }.play();
 }
 
+// Let player pick tile
 fn choose_character() -> (Tile, Tile) {
     let mut char;
     println!("Choose your character, X or O:");
